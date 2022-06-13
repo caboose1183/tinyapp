@@ -43,6 +43,29 @@ app.get("/urls/:shortURL", (req, res) => {
 
 
 
+app.post("/urls", (req, res) => {
+  console.log(req.body);  // Log the POST request body to the console
+  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+});
+
+
+
+function generateRandomString() {
+  let codeList = ['a', 'b', 'c', 'd', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+
+  let shortURL = [];
+
+  for (let i = 0; i < 6; i++) {
+    let randomNum = Math.round ((Math.random () * 36));
+    shortURL.push (codeList[randomNum]);
+  };
+
+  return shortURL;
+};
+
+
+
+
 
 
 app.listen(PORT, () => {
