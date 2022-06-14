@@ -32,7 +32,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new"); 
+  res.render("urls_new");
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -56,6 +56,12 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = req.body.longURL;
 
   res.redirect(302, `/urls/${shortURL}`);
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL]
+
+  res.redirect(302, `/urls`);
 });
 
 
