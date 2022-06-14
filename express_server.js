@@ -64,6 +64,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect(302, `/urls`);
 });
 
+app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to show
+  console.log(req.params)
+  res.redirect(302, `/urls/${req.params.shortURL}`);
+});
+
+app.post("/urls/:shortURL/edit", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL
+
+  res.redirect(302, `/urls`);
+});
+
 
 
 function generateRandomString() {
