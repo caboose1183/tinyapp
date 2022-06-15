@@ -61,6 +61,11 @@ app.get("/urls/new", (req, res) => {
     urls: urlDatabase,
     user: users[req.cookies.user_id]
   };
+
+  if (templateVars.user === undefined) {    //if not logged in , redirects to register
+    return res.redirect (302, '/register');
+  }
+
   res.render("urls_new", templateVars);
 });
 
