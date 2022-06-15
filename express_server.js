@@ -9,10 +9,25 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+/////////////////////////global values
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {
+  "sid": {
+    id: "sid",
+    email: "sid@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "sid2": {
+    id: "sid2",
+    email: "sid2@example.com",
+    password: "dishwasher-funk"
+  }
+}
 
 /////////////////////////////// GET requests
 
@@ -31,7 +46,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username']
+    user: users[req.cookies.user_id]
   };
   res.render('urls_index', templateVars);
 });
@@ -39,7 +54,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies['username']
+    user: users[req.cookies.user_id]
   };
   res.render("urls_new", templateVars);
 });
@@ -48,7 +63,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies['username']
+    user: users[req.cookies.user_id]
   };
 
   res.render("urls_show", templateVars);
@@ -64,10 +79,10 @@ app.get("/register", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies['username']
+    user: users[req.cookies.user_id]
   };
 
-  res.render ("register", templateVars);
+  res.render("register", templateVars);
 });
 
 
@@ -107,8 +122,21 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username')
-  
+  res.clearCookie('user_id')
+
+  res.redirect(302, `/urls`);
+});
+
+app.post("/register", (req, res) => {
+  let id = generateRandomString();
+
+  users[id] = {
+    'id': id,
+    'email': req.body.email,
+    'password': req.body.password
+  };
+
+  res.cookie('user_id', id);
   res.redirect(302, `/urls`);
 });
 
