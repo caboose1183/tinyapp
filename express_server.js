@@ -85,6 +85,12 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
+app.get("/login", (req, res) => {
+
+
+  res.render("login");
+});
+
 
 ////////////////////////////////POST requests
 
@@ -128,6 +134,14 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  if (req.body.email === "" || req.body.password === "") {
+    return res.send('Error 400');
+  };
+
+  if (doesEmailExist(req.body.email, users)) {
+    return res.send('Error 400, email already exists');
+  }
+
   let id = generateRandomString();
 
   users[id] = {
@@ -157,6 +171,16 @@ function generateRandomString() {
 
   return shortURL;
 };
+
+function doesEmailExist(email, userList) {
+  for (let id in userList) {
+    if (userList[id].email === email) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 
 

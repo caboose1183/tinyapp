@@ -13,19 +13,27 @@
     </div>
 
 
-    <div class='text-right'>
 
-      <% if(user === undefined){ %>
 
-        <form method="POST" class='form-inline' action="/login">
-          <input class='form-control' type="text" name="username" placeholder="" style="width: 300px; margin: 1em">
+
+    <div class='btn-group'>
+
+      <% if(user===undefined){ %>
+
+        <form method="GET" action="/login">
           <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+
+
+        <form method="GET" action="/Register">
+          <button type="submit" class="btn btn-secondary">Register</button>
         </form>
 
         <% } else{ %>
 
-          <form method="POST" class='form-inline' action="/logout">Logged in as: <%= user.email %>
-              <button type="submit" class="btn btn-primary">Logout</button>
+          <form method="POST" class='form-inline' action="/logout">
+            <label>Logged in as: <%= user.email %></label>
+            <button type="submit" class="btn btn-primary">Logout</button>
           </form>
           <% } %>
     </div>
