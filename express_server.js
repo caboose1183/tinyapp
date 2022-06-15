@@ -14,7 +14,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-
+/////////////////////////////// GET requests
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -60,16 +60,20 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+app.get("/register", (req, res) => {
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies['username']
+  };
 
-
-
-app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-
-  urlDatabase[shortURL] = req.body.longURL;
-
-  res.redirect(302, `/urls/${shortURL}`);
+  res.render ("register", templateVars);
 });
+
+
+////////////////////////////////POST requests
+
+
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL]
@@ -88,6 +92,14 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   res.redirect(302, `/urls`);
 });
 
+app.post("/urls", (req, res) => {
+  let shortURL = generateRandomString();
+
+  urlDatabase[shortURL] = req.body.longURL;
+
+  res.redirect(302, `/urls/${shortURL}`);
+});
+
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username)
 
@@ -99,6 +111,9 @@ app.post("/logout", (req, res) => {
   
   res.redirect(302, `/urls`);
 });
+
+
+
 
 
 
@@ -114,8 +129,6 @@ function generateRandomString() {
 
   return shortURL;
 };
-
-
 
 
 
