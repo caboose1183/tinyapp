@@ -20,12 +20,17 @@ const users = {
   "sid": {
     id: "sid",
     email: "sid@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "123"
   },
   "sid2": {
     id: "sid2",
     email: "sid2@example.com",
-    password: "dishwasher-funk"
+    password: "testing"
+  },
+  "sid3": {
+    id: "sid3",
+    email: "bb32@example.com",
+    password: "holy"
   }
 }
 
@@ -86,9 +91,13 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    user: users[req.cookies.user_id]
+  };
 
-
-  res.render("login");
+  res.render("login", templateVars);
 });
 
 
@@ -121,10 +130,23 @@ app.post("/urls", (req, res) => {
   res.redirect(302, `/urls/${shortURL}`);
 });
 
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username)
+app.post("/login", (req, res) => {                       /////////new login page logic
+  if (!doesEmailExist(req.body.email, users)) {
+    return res.send('Error 403, email cannot be found');
+  }
 
-  res.redirect(302, `/urls`);
+  if (doesEmailExist(req.body.email, users)) {
+
+    for (let user in users) {
+      if (req.body.password === users[user].password) {
+        res.cookie ('user_id', users[user].id)
+
+        return res.redirect(302, `/urls`);
+      }
+    }
+  }
+
+  res.send('Error 403, incorrect password');
 });
 
 app.post("/logout", (req, res) => {
