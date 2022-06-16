@@ -57,13 +57,7 @@ app.get("/hello", (req, res) => {
 ///////////////////////////// main pages
 
 app.get("/urls", (req, res) => {
-  let urlList = {};
-
-  for (let smallURL in urlDatabase) {
-    if (urlDatabase[smallURL].userID === req.cookies.user_id) {
-      urlList[smallURL] = urlDatabase[smallURL].longURL
-    }
-  }
+  let urlList = urlsForUser(req.cookies.user_id)
 
   const templateVars = {
     urls: urlList,
@@ -86,19 +80,23 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-app.get("/urls/:shortURL", (req, res) => {
+app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies.user_id]
   };
 
+  if (req.cookies.user_id === undefined) {
+    return res.send ('Error 400: Please login')
+  }
+
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to longURL
   if (req.params.shortURL.length < 6 || urlDatabase[req.params.shortURL] === undefined) {
-    return res.send ('Error 400, tiny URL does not exist.')
+    return res.send('Error 400, tiny URL does not exist.')
   }
 
   const longURL = urlDatabase[req.params.shortURL].longURL
@@ -151,7 +149,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {             ///edit longURL, sa
 app.post("/urls", (req, res) => {             ////create new shortURLS
   let shortURL = generateRandomString();
 
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies.user_id}
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies.user_id }
 
   res.redirect(302, `/urls/${shortURL}`);
 });
@@ -228,6 +226,18 @@ function doesEmailExist(email, userList) {
   }
 
   return false;
+}
+
+function urlsForUser(id) {
+  let urlList = {};
+
+  for (let smallURL in urlDatabase) {
+    if (urlDatabase[smallURL].userID === id) {
+      urlList[smallURL] = urlDatabase[smallURL].longURL;
+    }
+  }
+
+  return urlList;
 }
 
 
