@@ -3,12 +3,21 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
+const cookieSession = require('cookie-session')
+
 
 app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["this is a test key"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 /////////////////////////global values
 
@@ -58,11 +67,11 @@ app.get("/hello", (req, res) => {
 ///////////////////////////// main pages
 
 app.get("/urls", (req, res) => {
-  let urlList = urlsForUser(req.cookies.user_id)
+  let urlList = urlsForUser(req.session.user_id)
 
   const templateVars = {
     urls: urlList,
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
 
   res.render('urls_index', templateVars);
@@ -71,7 +80,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
 
   if (templateVars.user === undefined) {    //if not logged in , redirects to register
@@ -85,14 +94,14 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
 
-  if (req.cookies.user_id === undefined) {
+  if (req.session.user_id === undefined) {
     return res.send('Error 400: Please login');
   }
 
-  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     return res.send('Error 400: tiny URL does not belong to user');
   }
 
@@ -113,7 +122,7 @@ app.get("/register", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
 
   res.render("register", templateVars);
@@ -123,7 +132,7 @@ app.get("/login", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
   };
 
   res.render("login", templateVars);
@@ -135,11 +144,11 @@ app.get("/login", (req, res) => {
 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.cookies.user_id === undefined) {
+  if (req.session.user_id === undefined) {
     return res.send('Error 400: Please login');
   }
 
-  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     return res.send('Error 400: tiny URL does not belong to user');
   }
 
@@ -149,11 +158,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to show
-  if (req.cookies.user_id === undefined) {
+  if (req.session.user_id === undefined) {
     return res.send('Error 400: Please login');
   }
 
-  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     return res.send('Error 400: tiny URL does not belong to user');
   }
 
@@ -169,7 +178,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {             ///edit longURL, sa
 app.post("/urls", (req, res) => {             ////create new shortURLS
   let shortURL = generateRandomString();
 
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies.user_id }
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user_id }
 
   res.redirect(302, `/urls/${shortURL}`);
 });
@@ -184,7 +193,7 @@ app.post("/login", (req, res) => {                       /////////new login page
     for (let user in users) {
       //if (req.body.password === users[user].password) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
-        res.cookie('user_id', users[user].id)
+        req.session.user_id = users[user].id;
 
         return res.redirect(302, `/urls`);
       }
@@ -194,8 +203,8 @@ app.post("/login", (req, res) => {                       /////////new login page
   res.send('Error 403, incorrect password');
 });
 
-app.post("/logout", (req, res) => {
-  res.clearCookie('user_id')
+app.post("/logout", (req, res) => {       ///removes cookie info
+  req.session = null;
 
   res.redirect(302, `/urls`);
 });
@@ -217,7 +226,7 @@ app.post("/register", (req, res) => {
     'password': bcrypt.hashSync(req.body.password, 10)
   };
 
-  res.cookie('user_id', id);
+  req.session.user_id = id;
   res.redirect(302, `/urls`);
 });
 
