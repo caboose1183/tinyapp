@@ -97,9 +97,11 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to longURL
-  const longURL = urlDatabase[req.params.shortURL].longURL
+  if (req.params.shortURL.length < 6 || urlDatabase[req.params.shortURL] === undefined) {
+    return res.send ('Error 400, tiny URL does not exist.')
+  }
 
-  console.log (longURL)
+  const longURL = urlDatabase[req.params.shortURL].longURL
 
   res.redirect(longURL);
 });
