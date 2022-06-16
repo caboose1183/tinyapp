@@ -1,23 +1,24 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session')
-
+const bodyParser = require("body-parser");
+const { getUserByEmail } = require ('./helpers');
 
 app.set("view engine", "ejs");
 
-const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["this is a test key"],
-
+  
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
+
+const PORT = 8080; // default port 8080
 
 /////////////////////////global values
 
@@ -53,6 +54,18 @@ const users = {
 /////////////////////////////// GET requests
 
 app.get("/", (req, res) => {
+  const templateVars = {
+    user: users[req.session.user_id]
+  };
+
+  if (templateVars.user === undefined) {
+    return res.redirect ('/login')
+  }
+
+  if (templateVars.user !== undefined) {
+    return res.redirect ('/urls')
+  }
+
   res.send("Hello!");
 });
 
@@ -84,7 +97,7 @@ app.get("/urls/new", (req, res) => {
   };
 
   if (templateVars.user === undefined) {    //if not logged in , redirects to register
-    return res.redirect(302, '/register');
+    return res.redirect(302, '/login');
   }
 
   res.render("urls_new", templateVars);
@@ -92,18 +105,19 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
   const templateVars = {
+    urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id]
   };
 
-  if (req.session.user_id === undefined) {
-    return res.send('Error 400: Please login');
-  }
+  // if (req.session.user_id === undefined) {
+  //   return res.send('Error 400: Please login');
+  // }
 
-  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
-    return res.send('Error 400: tiny URL does not belong to user');
-  }
+  // if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
+  //   return res.send('Error 400: tiny URL does not belong to user');
+  // }
 
   res.render("urls_show", templateVars);
 });
@@ -120,6 +134,7 @@ app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to 
 
 app.get("/register", (req, res) => {
   const templateVars = {
+    urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id]
@@ -130,6 +145,7 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const templateVars = {
+    urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id]
@@ -184,12 +200,29 @@ app.post("/urls", (req, res) => {             ////create new shortURLS
 });
 
 app.post("/login", (req, res) => {                       /////////new login page logic
-  if (!doesEmailExist(req.body.email, users)) {
+  // if (!doesEmailExist(req.body.email, users)) {
+  //   return res.send('Error 403, email cannot be found');
+  // }
+
+  // if (doesEmailExist(req.body.email, users)) {
+
+  //   for (let user in users) {
+  //     //if (req.body.password === users[user].password) {
+  //     if (bcrypt.compareSync(req.body.password, users[user].password)) {
+  //       req.session.user_id = users[user].id;
+
+  //       return res.redirect(302, `/urls`);
+  //     }
+  //   }
+  // }
+
+  const email = getUserByEmail(req.body.email, users);
+
+  if (email === undefined) {
     return res.send('Error 403, email cannot be found');
   }
 
-  if (doesEmailExist(req.body.email, users)) {
-
+  if (email) {
     for (let user in users) {
       //if (req.body.password === users[user].password) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
@@ -214,9 +247,9 @@ app.post("/register", (req, res) => {
     return res.send('Error 400');
   };
 
-  if (doesEmailExist(req.body.email, users)) {
-    return res.send('Error 400, email already exists');
-  }
+  // if (doesEmailExist(req.body.email, users)) {
+  //   return res.send('Error 400, email already exists');
+  // }
 
   let id = generateRandomString();
 
@@ -269,6 +302,7 @@ function urlsForUser(id) {
 
   return urlList;
 }
+
 
 
 

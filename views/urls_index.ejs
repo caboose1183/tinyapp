@@ -49,9 +49,14 @@
             </td>
           </tr>
           <% } %>
-
       </tbody>
     </table>
+
+    <% if (user===undefined) { %>
+      <div class="alert alert-primary" role="alert">
+        Please login!
+      </div>
+      <% } %>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
