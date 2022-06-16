@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcryptjs');
 
 app.set("view engine", "ejs");
 
@@ -88,11 +89,11 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
   };
 
   if (req.cookies.user_id === undefined) {
-    return res.send ('Error 400: Please login');
+    return res.send('Error 400: Please login');
   }
 
   if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
-    return res.send ('Error 400: tiny URL does not belong to user');
+    return res.send('Error 400: tiny URL does not belong to user');
   }
 
   res.render("urls_show", templateVars);
@@ -135,11 +136,11 @@ app.get("/login", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.cookies.user_id === undefined) {
-    return res.send ('Error 400: Please login');
+    return res.send('Error 400: Please login');
   }
 
   if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
-    return res.send ('Error 400: tiny URL does not belong to user');
+    return res.send('Error 400: tiny URL does not belong to user');
   }
 
   delete urlDatabase[req.params.shortURL];
@@ -149,11 +150,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to show
   if (req.cookies.user_id === undefined) {
-    return res.send ('Error 400: Please login');
+    return res.send('Error 400: Please login');
   }
 
   if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
-    return res.send ('Error 400: tiny URL does not belong to user');
+    return res.send('Error 400: tiny URL does not belong to user');
   }
 
   res.redirect(302, `/urls/${req.params.shortURL}`);
@@ -181,7 +182,8 @@ app.post("/login", (req, res) => {                       /////////new login page
   if (doesEmailExist(req.body.email, users)) {
 
     for (let user in users) {
-      if (req.body.password === users[user].password) {
+      //if (req.body.password === users[user].password) {
+      if (bcrypt.compareSync(req.body.password, users[user].password)) {
         res.cookie('user_id', users[user].id)
 
         return res.redirect(302, `/urls`);
@@ -212,7 +214,7 @@ app.post("/register", (req, res) => {
   users[id] = {
     'id': id,
     'email': req.body.email,
-    'password': req.body.password
+    'password': bcrypt.hashSync(req.body.password, 10)
   };
 
   res.cookie('user_id', id);
