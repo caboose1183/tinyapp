@@ -1,3 +1,4 @@
+///////////required modules and imports
 const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
@@ -5,9 +6,9 @@ const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session')
 const bodyParser = require("body-parser");
 const { getUserByEmail } = require ('./helpers');
-
+//////setting view engine
 app.set("view engine", "ejs");
-
+//////using parsers and cookies
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cookieSession({
@@ -77,9 +78,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-///////////////////////////// main pages
-
-app.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => {                ////main URL page
   let urlList = urlsForUser(req.session.user_id)
 
   const templateVars = {
@@ -111,14 +110,6 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
     user: users[req.session.user_id]
   };
 
-  // if (req.session.user_id === undefined) {
-  //   return res.send('Error 400: Please login');
-  // }
-
-  // if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
-  //   return res.send('Error 400: tiny URL does not belong to user');
-  // }
-
   res.render("urls_show", templateVars);
 });
 
@@ -126,6 +117,13 @@ app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to 
   if (req.params.shortURL.length < 6 || urlDatabase[req.params.shortURL] === undefined) {
     return res.send('Error 400, tiny URL does not exist.')
   }
+
+  const templateVars = {
+    urlDatabase: urlDatabase,
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: users[req.session.user_id]
+  };
 
   const longURL = urlDatabase[req.params.shortURL].longURL
 
