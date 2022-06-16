@@ -88,7 +88,11 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
   };
 
   if (req.cookies.user_id === undefined) {
-    return res.send ('Error 400: Please login')
+    return res.send ('Error 400: Please login');
+  }
+
+  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+    return res.send ('Error 400: tiny URL does not belong to user');
   }
 
   res.render("urls_show", templateVars);
@@ -130,12 +134,27 @@ app.get("/login", (req, res) => {
 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL]
+  if (req.cookies.user_id === undefined) {
+    return res.send ('Error 400: Please login');
+  }
+
+  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+    return res.send ('Error 400: tiny URL does not belong to user');
+  }
+
+  delete urlDatabase[req.params.shortURL];
 
   res.redirect(302, `/urls`);
 });
 
 app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to show
+  if (req.cookies.user_id === undefined) {
+    return res.send ('Error 400: Please login');
+  }
+
+  if (req.cookies.user_id !== urlDatabase[req.params.shortURL].userID) {
+    return res.send ('Error 400: tiny URL does not belong to user');
+  }
 
   res.redirect(302, `/urls/${req.params.shortURL}`);
 });
