@@ -1,7 +1,7 @@
 ///////////required modules and imports
 const express = require("express");
 const app = express();
-const cookieParser = require("cookie-parser");
+//const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
@@ -12,7 +12,7 @@ app.set("view engine", "ejs");
 
 //////using parsers and cookies
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["why would someone eat olives"],
@@ -223,26 +223,28 @@ app.post("/logout", (req, res) => {       //removes cookie info
 
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
+
     const templateVars = {
       urlDatabase: urlDatabase,
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL],
-      user: ''
+      user: '',
+      email: ''
     };
 
     return res.render("register", templateVars);
   };
 
-  if (doesEmailExist(req.body.email, users)) {
-    const templateVars = {
-      urlDatabase: urlDatabase,
-      shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL],
-      user: true
-    };
+  for (let user in users) {
+    if (req.body.email === users[user].email) {
+      templateVars = {
+        user: '',
+        email: 'exists'
+      }
 
-    return res.render("register", templateVars);
-  }
+      return res.render("register", templateVars);
+    }
+  };
 
   let id = generateRandomString();
 
@@ -270,15 +272,6 @@ function generateRandomString() {
 
   return shortURL;
 };
-
-function doesEmailExist(email, userList) {
-  for (let id in userList) {
-    if (userList[id].email === email) {
-      return true;
-    }
-  }
-  return false;
-}
 
 function urlsForUser(id) {
   let urlList = {};

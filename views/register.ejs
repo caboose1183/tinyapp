@@ -33,13 +33,14 @@
       </form>
     </main>
 
-    <% if (user==='') { %>
+    <% if (user==='' && email === 'exists') { %>
       <div class="alert alert-primary" role="alert">
-        Email or password is empty! Please enter a valid email or password!
+        Email exists already! Please input another email!
       </div>
-      <% } else if (user===true) { %>
+      <% } else if (user==='') { %>
         <div class="alert alert-primary" role="alert">
-          Email exists already! Please input another email!
+          Email or password is empty! Please enter a valid email or password!
+          
         </div>
         <% } %>
 
