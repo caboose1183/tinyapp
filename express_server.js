@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const { getUserByEmail } = require ('./helpers');
 //////setting view engine
@@ -60,11 +60,11 @@ app.get("/", (req, res) => {
   };
 
   if (templateVars.user === undefined) {
-    return res.redirect ('/login')
+    return res.redirect ('/login');
   }
 
   if (templateVars.user !== undefined) {
-    return res.redirect ('/urls')
+    return res.redirect ('/urls');
   }
 
   res.send("Hello!");
@@ -107,7 +107,7 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
   };
 
   res.render("urls_show", templateVars);
@@ -115,7 +115,7 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
 
 app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to longURL
   if (req.params.shortURL.length < 6 || urlDatabase[req.params.shortURL] === undefined) {
-    return res.send('Error 400, tiny URL does not exist.')
+    return res.send('Error 400, tiny URL does not exist.');
   }
 
   const templateVars = {
@@ -125,7 +125,7 @@ app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to 
     user: users[req.session.user_id]
   };
 
-  const longURL = urlDatabase[req.params.shortURL].longURL
+  const longURL = urlDatabase[req.params.shortURL].longURL;
 
   res.redirect(longURL);
 });
@@ -135,7 +135,8 @@ app.get("/register", (req, res) => {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
+    emailExists: doesEmailExist(req.body.email, users)
   };
 
   res.render("register", templateVars);
@@ -192,28 +193,12 @@ app.post("/urls/:shortURL/edit", (req, res) => {             ///edit longURL, sa
 app.post("/urls", (req, res) => {             ////create new shortURLS
   let shortURL = generateRandomString();
 
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user_id }
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
 
   res.redirect(302, `/urls/${shortURL}`);
 });
 
 app.post("/login", (req, res) => {                       /////////new login page logic
-  // if (!doesEmailExist(req.body.email, users)) {
-  //   return res.send('Error 403, email cannot be found');
-  // }
-
-  // if (doesEmailExist(req.body.email, users)) {
-
-  //   for (let user in users) {
-  //     //if (req.body.password === users[user].password) {
-  //     if (bcrypt.compareSync(req.body.password, users[user].password)) {
-  //       req.session.user_id = users[user].id;
-
-  //       return res.redirect(302, `/urls`);
-  //     }
-  //   }
-  // }
-
   const email = getUserByEmail(req.body.email, users);
 
   if (email === undefined) {
@@ -222,7 +207,6 @@ app.post("/login", (req, res) => {                       /////////new login page
 
   if (email) {
     for (let user in users) {
-      //if (req.body.password === users[user].password) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
         req.session.user_id = users[user].id;
 
@@ -242,12 +226,12 @@ app.post("/logout", (req, res) => {       ///removes cookie info
 
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
-    return res.send('Error 400');
+    return res.redirect('/register');
   };
 
-  // if (doesEmailExist(req.body.email, users)) {
-  //   return res.send('Error 400, email already exists');
-  // }
+  if (doesEmailExist(req.body.email, users)) {
+    return res.send('Error 400, email already exists');
+  }1
 
   let id = generateRandomString();
 
@@ -261,10 +245,7 @@ app.post("/register", (req, res) => {
   res.redirect(302, `/urls`);
 });
 
-
-
-
-
+////////////////functions
 
 function generateRandomString() {
   let codeList = ['a', 'b', 'c', 'd', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -300,10 +281,6 @@ function urlsForUser(id) {
 
   return urlList;
 }
-
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
