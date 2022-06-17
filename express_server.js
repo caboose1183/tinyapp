@@ -5,16 +5,18 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
-const { getUserByEmail } = require ('./helpers');
+const { getUserByEmail } = require('./helpers');
+
 //////setting view engine
 app.set("view engine", "ejs");
+
 //////using parsers and cookies
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["why would someone eat olives"],
-  
+
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
@@ -26,11 +28,11 @@ const PORT = 8080; // default port 8080
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "sid"
+    userID: "aJ48lW"
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
-    userID: "sid2"
+    userID: "aJ48lW"
   }
 };
 
@@ -38,16 +40,16 @@ const users = {
   "sid": {
     id: "sid",
     email: "sid@example.com",
-    password: "123"
+    password: "purple"
   },
-  "sid2": {
-    id: "sid2",
-    email: "sid2@example.com",
+  "larry": {
+    id: "larry",
+    email: "larry@example.com",
     password: "testing"
   },
-  "sid3": {
-    id: "sid3",
-    email: "bb32@example.com",
+  "derek": {
+    id: "derek",
+    email: "derek@example.com",
     password: "holy"
   }
 }
@@ -60,11 +62,11 @@ app.get("/", (req, res) => {
   };
 
   if (templateVars.user === undefined) {
-    return res.redirect ('/login');
+    return res.redirect('/login');
   }
 
   if (templateVars.user !== undefined) {
-    return res.redirect ('/urls');
+    return res.redirect('/urls');
   }
 
   res.send("Hello!");
@@ -78,7 +80,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls", (req, res) => {                ////main URL page
+app.get("/urls", (req, res) => {                //main URL page
   let urlList = urlsForUser(req.session.user_id)
 
   const templateVars = {
@@ -102,7 +104,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
+app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
   const templateVars = {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
@@ -113,7 +115,7 @@ app.get("/urls/:shortURL", (req, res) => {    ///url of shortURL
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:shortURL", (req, res) => {                 /////////// redirect to longURL
+app.get("/u/:shortURL", (req, res) => {                 // redirect to longURL
   if (req.params.shortURL.length < 6 || urlDatabase[req.params.shortURL] === undefined) {
     return res.send('Error 400, tiny URL does not exist.');
   }
@@ -152,10 +154,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
-
 ////////////////////////////////POST requests
-
-
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id === undefined) {
@@ -183,13 +182,13 @@ app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to s
   res.redirect(302, `/urls/${req.params.shortURL}`);
 });
 
-app.post("/urls/:shortURL/edit", (req, res) => {             ///edit longURL, same shortURL
+app.post("/urls/:shortURL/edit", (req, res) => {             //edit longURL, same shortURL
   urlDatabase[req.params.shortURL].longURL = req.body.longURL
 
   res.redirect(302, `/urls`);
 });
 
-app.post("/urls", (req, res) => {             ////create new shortURLS
+app.post("/urls", (req, res) => {             //create new shortURLS
   let shortURL = generateRandomString();
 
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
@@ -197,7 +196,7 @@ app.post("/urls", (req, res) => {             ////create new shortURLS
   res.redirect(302, `/urls/${shortURL}`);
 });
 
-app.post("/login", (req, res) => {                       /////////new login page logic
+app.post("/login", (req, res) => {                       //new login page logic
   const email = getUserByEmail(req.body.email, users);
 
   if (email === undefined) {
@@ -213,11 +212,10 @@ app.post("/login", (req, res) => {                       /////////new login page
       }
     }
   }
-
   res.send('Error 403, incorrect password');
 });
 
-app.post("/logout", (req, res) => {       ///removes cookie info
+app.post("/logout", (req, res) => {       //removes cookie info
   req.session = null;
 
   res.redirect(302, `/urls`);
@@ -225,25 +223,25 @@ app.post("/logout", (req, res) => {       ///removes cookie info
 
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
-
     const templateVars = {
       urlDatabase: urlDatabase,
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL],
       user: ''
     };
-  
+
     return res.render("register", templateVars);
-
-
-
-
-
-    //return res.redirect('/register');
   };
 
   if (doesEmailExist(req.body.email, users)) {
-    return res.send('Error 400, email already exists');
+    const templateVars = {
+      urlDatabase: urlDatabase,
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL],
+      user: true
+    };
+
+    return res.render("register", templateVars);
   }
 
   let id = generateRandomString();
@@ -279,7 +277,6 @@ function doesEmailExist(email, userList) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -291,10 +288,10 @@ function urlsForUser(id) {
       urlList[smallURL] = urlDatabase[smallURL].longURL;
     }
   }
-
   return urlList;
 }
 
+//////////////////server listening
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

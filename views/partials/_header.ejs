@@ -12,23 +12,16 @@
       </div>
     </div>
 
-
-
-
-
     <div class='btn-group'>
 
-      <% if(user===undefined || user === ''){ %>
-
+      <% if(user===undefined || user==='' ){ %>
         <form method="GET" action="/login">
           <button type="submit" class="btn btn-primary">Login</button>
         </form>
 
-
         <form method="GET" action="/Register">
           <button type="submit" class="btn btn-secondary">Register</button>
         </form>
-
         <% } else{ %>
 
           <form method="POST" class='form-inline' action="/logout">
@@ -37,7 +30,5 @@
           </form>
           <% } %>
     </div>
-
-
   </nav>
 </header>
