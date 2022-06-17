@@ -1,7 +1,6 @@
 ///////////required modules and imports
 const express = require("express");
 const app = express();
-//const cookieParser = require("cookie-parser");
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
@@ -12,7 +11,6 @@ app.set("view engine", "ejs");
 
 //////using parsers and cookies
 app.use(bodyParser.urlencoded({ extended: true }));
-//app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["why would someone eat olives"],
@@ -83,36 +81,36 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {                //main URL page
   let urlList = urlsForUser(req.session.user_id)
 
-  const templateVars = {
+  const urlsInfo = {
     urls: urlList,
     user: users[req.session.user_id]
   };
 
-  res.render('urls_index', templateVars);
+  res.render('urls_index', urlsInfo);
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
+  const urlsInfo = {
     urls: urlDatabase,
     user: users[req.session.user_id]
   };
 
-  if (templateVars.user === undefined) {    //if not logged in , redirects to register
+  if (urlsInfo.user === undefined) {    //if not logged in , redirects to register
     return res.redirect(302, '/login');
   }
 
-  res.render("urls_new", templateVars);
+  res.render("urls_new", urlsInfo);
 });
 
 app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
-  const templateVars = {
+  const urlsInfo = {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
   };
 
-  res.render("urls_show", templateVars);
+  res.render("urls_show", urlsInfo);
 });
 
 app.get("/u/:shortURL", (req, res) => {                 // redirect to longURL
@@ -120,7 +118,7 @@ app.get("/u/:shortURL", (req, res) => {                 // redirect to longURL
     return res.send('Error 400, tiny URL does not exist.');
   }
 
-  const templateVars = {
+  const urlsInfo = {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
@@ -133,25 +131,25 @@ app.get("/u/:shortURL", (req, res) => {                 // redirect to longURL
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = {
+  const urlsInfo = {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id],
   };
 
-  res.render("register", templateVars);
+  res.render("register", urlsInfo);
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = {
+  const urlsInfo = {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id]
   };
 
-  res.render("login", templateVars);
+  res.render("login", urlsInfo);
 });
 
 ////////////////////////////////POST requests
@@ -204,7 +202,7 @@ app.post("/login", (req, res) => {                       //new login page logic
   }
 
   if (email) {
-    for (let user in users) {
+    for (const user in users) {
       if (bcrypt.compareSync(req.body.password, users[user].password)) {
         req.session.user_id = users[user].id;
 
@@ -224,29 +222,26 @@ app.post("/logout", (req, res) => {       //removes cookie info
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
 
-    const templateVars = {
-      urlDatabase: urlDatabase,
-      shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL],
+    const registerInfo = {
       user: '',
       email: ''
     };
 
-    return res.render("register", templateVars);
+    return res.render("register", registerInfo);
   };
 
-  for (let user in users) {
+  for (const user in users) {
     if (req.body.email === users[user].email) {
-      templateVars = {
+      const registerInfo = {
         user: '',
         email: 'exists'
       }
 
-      return res.render("register", templateVars);
+      return res.render("register", registerInfo);
     }
   };
 
-  let id = generateRandomString();
+  const id = generateRandomString();
 
   users[id] = {
     'id': id,
