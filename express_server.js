@@ -83,6 +83,7 @@ app.get("/urls", (req, res) => {                //main URL page
 
   const urlsInfo = {
     urls: urlList,
+    shortURL: '',
     user: users[req.session.user_id],
     access: ''
   };
@@ -106,6 +107,21 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
   const urlList = urlsForUser(req.session.user_id) 
+
+  if (req.params.shortURL < 6 || urlDatabase[req.params.shortURL] == undefined) {
+    const urlsInfo = {
+      urlDatabase: urlDatabase,
+      urls: urlList,
+      shortURL: 'invalid',
+      longURL: '',
+      user: users[req.session.user_id],
+      access: ''
+    };
+
+
+
+    return res.render("urls_index", urlsInfo);
+  }
 
   const urlsInfo = {
     urlDatabase: urlDatabase,
