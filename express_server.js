@@ -4,7 +4,7 @@ const app = express();
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
-const { getUserByEmail } = require('./helpers');
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 //////setting view engine
 app.set("view engine", "ejs");
@@ -44,13 +44,8 @@ const users = {
     id: "larry",
     email: "larry@example.com",
     password: "testing"
-  },
-  "derek": {
-    id: "derek",
-    email: "derek@example.com",
-    password: "holy"
   }
-}
+};
 
 /////////////////////////////// GET requests
 
@@ -78,8 +73,8 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/urls", (req, res) => {                //main URL page
-  const urlList = urlsForUser(req.session.user_id)
+app.get("/urls", (req, res) => {
+  const urlList = urlsForUser(req.session.user_id, urlDatabase);
 
   const urlsInfo = {
     urls: urlList,
@@ -98,16 +93,17 @@ app.get("/urls/new", (req, res) => {
     access: ''
   };
 
-  if (urlsInfo.user === undefined) {    //if not logged in , redirects to register
+  if (urlsInfo.user === undefined) {
     return res.redirect(302, '/login');
   }
 
   res.render("urls_new", urlsInfo);
 });
 
-app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
-  const urlList = urlsForUser(req.session.user_id) 
+app.get("/urls/:shortURL", (req, res) => {
+  const urlList = urlsForUser(req.session.user_id, urlDatabase);
 
+  //changes value of appropriate key when shortURL is invalid
   if (req.params.shortURL < 6 || urlDatabase[req.params.shortURL] == undefined) {
     const urlsInfo = {
       urlDatabase: urlDatabase,
@@ -117,8 +113,6 @@ app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
       user: users[req.session.user_id],
       access: ''
     };
-
-
 
     return res.render("urls_index", urlsInfo);
   }
@@ -132,8 +126,6 @@ app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
     access: ''
   };
 
-  console.log (urlsInfo.user)
-
   if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     urlsInfo.access = 'denied'
 
@@ -143,9 +135,21 @@ app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
   res.render("urls_show", urlsInfo);
 });
 
-app.get("/u/:shortURL", (req, res) => {                 // redirect to longURL
-  if (req.params.shortURL.length < 6 || urlDatabase[req.params.shortURL] === undefined) {
-    return res.send('Error 400, tiny URL does not exist.');
+app.get("/u/:shortURL", (req, res) => {                //
+  const urlList = urlsForUser(req.session.user_id, urlDatabase);
+
+  //changes value of appropriate key when shortURL is invalid
+  if (req.params.shortURL < 6 || urlDatabase[req.params.shortURL] == undefined) {
+    const urlsInfo = {
+      urlDatabase: urlDatabase,
+      urls: urlList,
+      shortURL: 'invalid',
+      longURL: '',
+      user: users[req.session.user_id],
+      access: ''
+    };
+
+    return res.render("urls_index", urlsInfo);
   }
 
   const urlsInfo = {
@@ -201,7 +205,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect(302, `/urls`);
 });
 
-app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to show
+app.post("/urls/:shortURL", (req, res) => {
   if (req.session.user_id === undefined) {
     return res.send('Error 400: Please login');
   }
@@ -213,13 +217,13 @@ app.post("/urls/:shortURL", (req, res) => {         //from index, redirects to s
   res.redirect(302, `/urls/${req.params.shortURL}`);
 });
 
-app.post("/urls/:shortURL/edit", (req, res) => {             //edit longURL, same shortURL
+app.post("/urls/:shortURL/edit", (req, res) => {
   urlDatabase[req.params.shortURL].longURL = req.body.longURL
 
   res.redirect(302, `/urls`);
 });
 
-app.post("/urls", (req, res) => {             //create new shortURLS
+app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
 
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user_id };
@@ -227,7 +231,7 @@ app.post("/urls", (req, res) => {             //create new shortURLS
   res.redirect(302, `/urls/${shortURL}`);
 });
 
-app.post("/login", (req, res) => {                       //new login page logic
+app.post("/login", (req, res) => {
   const email = getUserByEmail(req.body.email, users);
 
   if (email === undefined) {
@@ -246,7 +250,7 @@ app.post("/login", (req, res) => {                       //new login page logic
   res.send('Error 403, incorrect password');
 });
 
-app.post("/logout", (req, res) => {       //removes cookie info
+app.post("/logout", (req, res) => {
   req.session = null;
 
   res.redirect(302, `/urls`);
@@ -285,32 +289,6 @@ app.post("/register", (req, res) => {
   req.session.user_id = id;
   res.redirect(302, `/urls`);
 });
-
-////////////////functions
-
-function generateRandomString() {
-  let codeList = ['a', 'b', 'c', 'd', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-
-  let shortURL = '';
-
-  for (let i = 0; i < 6; i++) {
-    let randomNum = Math.round((Math.random() * 36));
-    shortURL += codeList[randomNum];
-  };
-
-  return shortURL;
-};
-
-function urlsForUser(id) {
-  let urlList = {};
-
-  for (let smallURL in urlDatabase) {
-    if (urlDatabase[smallURL].userID === id) {
-      urlList[smallURL] = urlDatabase[smallURL].longURL;
-    }
-  }
-  return urlList;
-}
 
 //////////////////server listening
 app.listen(PORT, () => {
