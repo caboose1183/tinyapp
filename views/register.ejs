@@ -33,6 +33,12 @@
       </form>
     </main>
 
+    <% if (user==='') { %>
+      <div class="alert alert-primary" role="alert">
+        Email or password is empty! Please enter a valid email or password!
+      </div>
+      <% } %>
+
 
         <!-- Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

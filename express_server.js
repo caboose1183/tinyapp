@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
-  keys: ["this is a test key"],
+  keys: ["why would someone eat olives"],
   
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
@@ -136,7 +136,6 @@ app.get("/register", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id],
-    emailExists: doesEmailExist(req.body.email, users)
   };
 
   res.render("register", templateVars);
@@ -226,12 +225,26 @@ app.post("/logout", (req, res) => {       ///removes cookie info
 
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
-    return res.redirect('/register');
+
+    const templateVars = {
+      urlDatabase: urlDatabase,
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL],
+      user: ''
+    };
+  
+    return res.render("register", templateVars);
+
+
+
+
+
+    //return res.redirect('/register');
   };
 
   if (doesEmailExist(req.body.email, users)) {
     return res.send('Error 400, email already exists');
-  }1
+  }
 
   let id = generateRandomString();
 
