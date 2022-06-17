@@ -79,11 +79,12 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {                //main URL page
-  let urlList = urlsForUser(req.session.user_id)
+  const urlList = urlsForUser(req.session.user_id)
 
   const urlsInfo = {
     urls: urlList,
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
+    access: ''
   };
 
   res.render('urls_index', urlsInfo);
@@ -92,7 +93,8 @@ app.get("/urls", (req, res) => {                //main URL page
 app.get("/urls/new", (req, res) => {
   const urlsInfo = {
     urls: urlDatabase,
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
+    access: ''
   };
 
   if (urlsInfo.user === undefined) {    //if not logged in , redirects to register
@@ -103,12 +105,24 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {    //url of shortURL
+  const urlList = urlsForUser(req.session.user_id) 
+
   const urlsInfo = {
     urlDatabase: urlDatabase,
+    urls: urlList,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.session.user_id],
+    access: ''
   };
+
+  console.log (urlsInfo.user)
+
+  if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
+    urlsInfo.access = 'denied'
+
+    return res.render("urls_index", urlsInfo);
+  }
 
   res.render("urls_show", urlsInfo);
 });
@@ -122,7 +136,8 @@ app.get("/u/:shortURL", (req, res) => {                 // redirect to longURL
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
+    access: ''
   };
 
   const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -136,6 +151,7 @@ app.get("/register", (req, res) => {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id],
+    access: ''
   };
 
   res.render("register", urlsInfo);
@@ -146,7 +162,8 @@ app.get("/login", (req, res) => {
     urlDatabase: urlDatabase,
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    user: users[req.session.user_id]
+    user: users[req.session.user_id],
+    access: ''
   };
 
   res.render("login", urlsInfo);
